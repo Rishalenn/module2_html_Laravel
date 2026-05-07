@@ -9,13 +9,21 @@ class TaskController extends Controller
 {
     public function index()
     {
-        $tasks = Task::latest()->get();
-        return view('tasks.index', compact('tasks'));
+        $tasks = auth()->user()
+            ->tasks()
+            ->latest()
+            ->get();
+
+        return view('dashboard', compact('tasks'));
     }
 
     public function store(Request $request)
     {
-        Task::create([
+        $request->validate([
+            'title' => 'required|string|max:255'
+        ]);
+
+        auth()->user()->tasks()->create([
             'title' => $request->title
         ]);
 
@@ -25,7 +33,9 @@ class TaskController extends Controller
     public function update($id)
     {
         $task = Task::findOrFail($id);
+
         $task->is_done = !$task->is_done;
+
         $task->save();
 
         return redirect()->back();
